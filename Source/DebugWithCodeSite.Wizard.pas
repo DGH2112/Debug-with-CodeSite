@@ -25,7 +25,7 @@ Uses
 
 Type
   (** A class which implements the OIOTAWizard interface to provide the plug-ins main IDE wizard. **)
-  TDWCSWizard = Class(TInterfacedObject, IOTAWizard, IDWCSOptionsReadWriter)
+  TDWCSWizard = Class(TInterfacedObject, IOTANotifier, IOTAWizard, IDWCSOptionsReadWriter)
   Strict Private
     FMenuTimer     : TTimer;
     FMenuInstalled : Boolean;
@@ -50,6 +50,8 @@ Type
     Procedure AddMenuToEditorContextMenu;
     Procedure MenuInstallerTimer(Sender : TObject);
     Procedure DebugWithCodeSiteClick(Sender : TObject);
+    Procedure LoadSettings;
+    Procedure SaveSettings;
   Public
     Constructor Create;
     Destructor Destroy; Override;
@@ -69,9 +71,14 @@ Uses
   ActnPopup,
   DebugWithCodeSite.Functions,
   Dialogs,
+  Registry,
   DebugWithCodeSite.AboutBox,
   DebugWithCodeSite.SplashScreen,
   DebugWithCodeSite.OptionsIDEInterface;
+
+Const
+  (** The registry key under which the settings are stored. **)
+  strRegKey = 'Software\Season''s Fall\Debug with CodeSite\';
 
 { TDWCSWizard }
 
@@ -242,6 +249,7 @@ Var
   OptionsReadWriter : IDWCSOptionsReadWriter;
 
 Begin
+  Inherited Create;
   AddSplashScreen;
   AddAboutBoxEntry;
   If Supports(Self, IDWCSOptionsReadWriter, OptionsReadWriter) Then
@@ -252,7 +260,8 @@ Begin
   FMenuTimer.OnTimer := MenuInstallerTimer;
   FMenuTimer.Enabled := True;
   FChecks := [dwcscCodeSiteLogging..dwcscBreak];
-  FCodeSiteMsg := 'CodeSite.Send(''DGH:%s'', %s)';
+  FCodeSiteMsg := 'CodeSite.Send(''%s'', %s)';
+  LoadSettings;
 End;
 
 (**
@@ -321,6 +330,7 @@ End;
 Destructor TDWCSWizard.Destroy;
 
 Begin
+  SaveSettings;
   TDWCSIDEOptionsHandler.RemoveOptionsFrameHandler;
   RemoveAboutBoxEntry;
   FMenuTimer.Free;
@@ -405,6 +415,29 @@ End;
 
 (**
 
+  This method loads the plug-ins settings from the regsitry.
+
+  @precon  None.
+  @postcon  The plug-ins settings are loaded.
+
+**)
+Procedure TDWCSWizard.LoadSettings;
+
+Var
+  R : TRegIniFile;
+
+Begin
+  R := TRegIniFile.Create(strRegKey);
+  Try
+    FCodeSiteMsg := R.ReadString('Setup', 'CodeSiteMsg', FCodeSiteMsg);
+    FChecks := TDWCSChecks(Byte(R.ReadInteger('Setup', 'Options', Byte(FChecks))));
+  Finally
+    R.Free;
+  End;
+End;
+
+(**
+
   This is an on timer event handler.
 
   @precon  None.
@@ -453,6 +486,29 @@ End;
 
 (**
 
+  This method saves the settings to the registry.
+
+  @precon  None.
+  @postcon The settings are saved.
+
+**)
+Procedure TDWCSWizard.SaveSettings;
+
+Var
+  R: TRegIniFile;
+
+Begin
+  R := TRegIniFile.Create(strRegKey);
+  Try
+    R.WriteString('Setup', 'CodeSiteMsg', FCodeSiteMsg);
+    R.WriteInteger('Setup', 'Options', Byte(FChecks));
+  Finally
+    R.Free;
+  End;
+End;
+
+(**
+
   This method updates the check options with the given options.
 
   @precon  None.
@@ -467,6 +523,7 @@ Procedure TDWCSWizard.WriteOptions(Const Options: TDWCSChecks; Const strCodeSite
 Begin
   FChecks := Options;
   FCodeSiteMsg := strCodeSiteMsg;
+  SaveSettings;
 End;
 
 End.
