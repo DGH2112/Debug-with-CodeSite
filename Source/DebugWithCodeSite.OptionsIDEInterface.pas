@@ -19,7 +19,7 @@ Interface
 Uses
   ToolsAPI,
   DebugWithCodeSite.OptionsFrame,
-  {$IFDEF DXE20}VCL.Forms{$ELSE}Forms{$ENDIF},
+  Forms,
   DebugWithCodeSite.Interfaces;
 
 Type
@@ -111,13 +111,14 @@ Procedure TDWCSIDEOptionsHandler.DialogClosed(Accepted: Boolean);
 Var
   I   : IDWCSOptions;
   Ops : TDWCSChecks;
+  strCodeSiteMsg: String;
 
 Begin
   If Accepted Then
     If Supports(FDWCSOptionsFrame, IDWCSOptions, I) Then
       Begin
-        I.SaveOptions(Ops);
-        FDWCSOptionsReadWriter.WriteOptions(Ops);
+        I.SaveOptions(Ops, strCodeSiteMsg);
+        FDWCSOptionsReadWriter.WriteOptions(Ops, strCodeSiteMsg);
       End;
 End;
 
@@ -135,11 +136,16 @@ Procedure TDWCSIDEOptionsHandler.FrameCreated(AFrame: TCustomFrame);
 
 Var
   I : IDWCSOptions;
+  Options : TDWCSChecks;
+  strCodeSiteMsg : String;
 
 Begin
   FDWCSOptionsFrame := AFrame As TframeDWCSOptions;
   If Supports(FDWCSOptionsFrame, IDWCSOptions, I) Then
-    I.LoadOptions(FDWCSOptionsReadWriter.ReadOptions);
+    Begin
+      FDWCSOptionsReadWriter.ReadOptions(Options, strCodeSiteMsg);
+      I.LoadOptions(Options, strCodeSiteMsg);
+    End;
 End;
 
 (**

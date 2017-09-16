@@ -30,6 +30,7 @@ Type
     FMenuTimer     : TTimer;
     FMenuInstalled : Boolean;
     FChecks        : TDWCSChecks;
+    FCodeSiteMsg   : String;
   Strict Protected
     // IOTAWizard
     Procedure Execute;
@@ -42,8 +43,8 @@ Type
     Procedure Destroyed;
     Procedure Modified;
     // IDWCSOptionsReadWriter
-    Function  ReadOptions: TDWCSChecks;
-    Procedure WriteOptions(Const Options: TDWCSChecks);
+    Procedure ReadOptions(Var Options: TDWCSChecks; Var strCodeSiteMsg : String);
+    Procedure WriteOptions(Const Options: TDWCSChecks; Const strCodeSiteMsg : String);
     // General Methods
     Function  AddImageToList(Const ImageList : TCustomImageList) : Integer;
     Procedure AddMenuToEditorContextMenu;
@@ -251,6 +252,7 @@ Begin
   FMenuTimer.OnTimer := MenuInstallerTimer;
   FMenuTimer.Enabled := True;
   FChecks := [dwcscCodeSiteLogging..dwcscBreak];
+  FCodeSiteMsg := 'CodeSite.Send(''DGH:%s'', %s)';
 End;
 
 (**
@@ -272,6 +274,8 @@ Var
   CP: TOTAEditPos;
   BP: IOTABreakpoint;
   strIdentifierAtCursor: String;
+  strMsg : String;
+  iPos: Integer;
 
 Begin
   If Supports(BorlandIDEServices, IOTAEditorServices, ES) Then
@@ -282,8 +286,15 @@ Begin
         If strIdentifierAtCursor <> '' Then
           Begin
             BP := DS.NewSourceBreakpoint(ES.TopBuffer.FileName, CP.Line, Nil);
-            BP.EvalExpression := Format('CodeSite.Send(''%s'', %s)',
-              [strIdentifierAtCursor, strIdentifierAtCursor]);
+            strMsg := FCodeSiteMsg;
+            iPos := Pos('%s', strMsg);
+            While iPos > 0 Do
+              Begin
+                strMsg := Copy(strMsg, 1, Pred(iPos)) + strIdentifierAtCursor +
+                  Copy(strMsg, iPos + 2, Length(strMsg) - iPos - 1);
+                iPos := Pos('%s', strMsg);
+              End;
+            BP.EvalExpression := strMsg;
             BP.LogResult := dwcscLogResult In FChecks;
             BP.DoBreak := dwcscBreak In FChecks;
             If dwcscCodeSiteLogging In FChecks Then
@@ -429,13 +440,15 @@ End;
   @precon  None.
   @postcon The check options are returned to the calling code.
 
-  @return  a TDWCSChecks
+  @param   Options        as a TDWCSChecks as a reference
+  @param   strCodeSiteMsg as a String as a reference
 
 **)
-Function TDWCSWizard.ReadOptions: TDWCSChecks;
+Procedure TDWCSWizard.ReadOptions(Var Options: TDWCSChecks; Var strCodeSiteMsg : String);
 
 Begin
-  Result := FChecks;
+  Options := FChecks;
+  strCodeSiteMsg := FCodeSiteMsg;
 End;
 
 (**
@@ -445,13 +458,15 @@ End;
   @precon  None.
   @postcon The check options are updated.
 
-  @param   Options as a TDWCSChecks as a constant
+  @param   Options        as a TDWCSChecks as a constant
+  @param   strCodeSiteMsg as a String as a constant
 
 **)
-Procedure TDWCSWizard.WriteOptions(Const Options: TDWCSChecks);
+Procedure TDWCSWizard.WriteOptions(Const Options: TDWCSChecks; Const strCodeSiteMsg : String);
 
 Begin
   FChecks := Options;
+  FCodeSiteMsg := strCodeSiteMsg;
 End;
 
 End.

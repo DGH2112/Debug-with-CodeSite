@@ -117,7 +117,9 @@
         </DCCReference>
         <DCCReference Include="..\Source\DebugWithCodeSite.Types.pas"/>
         <DCCReference Include="..\Source\DebugWithCodeSite.Interfaces.pas">
-            <Form>$R *.res</Form>
+            <Form>;
+
+{$R *.res</Form>
         </DCCReference>
         <None Include="..\Source\CompilerDefinitions.inc"/>
         <None Include="..\License.md"/>

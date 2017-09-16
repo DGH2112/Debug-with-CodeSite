@@ -33,8 +33,7 @@ uses
   DebugWithCodeSite.OptionsIDEInterface in '..\Source\DebugWithCodeSite.OptionsIDEInterface.pas',
   DebugWithCodeSite.OptionsFrame in '..\Source\DebugWithCodeSite.OptionsFrame.pas' {frameDWCSOptions: TFrame},
   DebugWithCodeSite.Types in '..\Source\DebugWithCodeSite.Types.pas',
-  {$R}
-  DebugWithCodeSite.Interfaces in '..\Source\DebugWithCodeSite.Interfaces.pas' {$R *.res};
+  DebugWithCodeSite.Interfaces in '..\Source\DebugWithCodeSite.Interfaces.pas';
 
 {$R *.res}
 

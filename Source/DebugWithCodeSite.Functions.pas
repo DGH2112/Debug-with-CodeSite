@@ -384,11 +384,10 @@ End;
 
 Procedure CheckLibraryPath;
 
-Var
-  i : Integer;
-
-  P : IOTAProjectOptionsConfigurations;
-  B : IOTABuildConfiguration;
+//Var
+//  i : Integer;
+//  P : IOTAProjectOptionsConfigurations;
+//  B : IOTABuildConfiguration;
 
 Begin
   OutputMsg('Checking of LibrayrPath not currently implemented');

@@ -23,18 +23,22 @@ Uses
   Dialogs,
   ComCtrls,
   DebugWithCodeSite.Types,
-  DebugWithCodeSite.Interfaces;
+  DebugWithCodeSite.Interfaces,
+  StdCtrls;
 
 Type
   (** A frame to decsribe tand edit the plug-ins optins in the IDE. **)
   TframeDWCSOptions = Class(TFrame, IDWCSOptions)
     lvOptions: TListView;
+    lblCodeSiteMsg: TLabel;
+    edtCodeSiteMsg: TEdit;
+    lblCodeSiteOptions: TLabel;
     procedure lvOptionsChange(Sender: TObject; Item: TListItem; Change: TItemChange);
   Strict Private
     FChecks : TDWCSChecks;
   Strict Protected
-    Procedure LoadOptions(Const CheckOptions : TDWCSChecks);
-    Procedure SaveOptions(Var CheckOptions : TDWCSChecks);
+    Procedure LoadOptions(Const CheckOptions : TDWCSChecks; Const strCodeSiteMsg : String);
+    Procedure SaveOptions(Var CheckOptions : TDWCSChecks; Var strCodeSiteMsg : String);
   Public
     Constructor Create(AOwner: TComponent); Override;
   End;
@@ -89,10 +93,11 @@ End;
   @precon  None.
   @postcon The checked status of the list view items is updated based on the given check set.
 
-  @param   CheckOptions as a TDWCSChecks as a constant
+  @param   CheckOptions   as a TDWCSChecks as a constant
+  @param   strCodeSiteMsg as a String as a constant
 
 **)
-Procedure TframeDWCSOptions.LoadOptions(Const CheckOptions : TDWCSChecks);
+Procedure TframeDWCSOptions.LoadOptions(Const CheckOptions : TDWCSChecks; Const strCodeSiteMsg : String);
 
 Var
   iOp: TDWCSCheck;
@@ -101,6 +106,7 @@ Begin
   FChecks := CheckOptions;
   For iOp := Low(TDWCSCheck) To High(TDWCSCheck) Do
     lvOptions.Items[Ord(iOp)].Checked := iOp In CheckOptions;
+  edtCodeSiteMsg.Text := strCodeSiteMsg;
 End;
 
 (**
@@ -132,13 +138,15 @@ End;
   @precon  None.
   @postcon The given options set is updated with the selected options.
 
-  @param   CheckOptions as a TDWCSChecks as a reference
+  @param   CheckOptions   as a TDWCSChecks as a reference
+  @param   strCodeSiteMsg as a String as a reference
 
 **)
-Procedure TframeDWCSOptions.SaveOptions(Var CheckOptions : TDWCSChecks);
+Procedure TframeDWCSOptions.SaveOptions(Var CheckOptions : TDWCSChecks; Var strCodeSiteMsg : String);
 
 Begin
   CheckOptions := FChecks;
+  strCodeSiteMsg := edtCodeSiteMsg.Text;
 End;
 
 End.
