@@ -23,7 +23,7 @@ Library DebugWithCodeSiteXE102;
 {$R 'DWCSITHVerInfo.res' 'DWCSITHVerInfo.RC'}
 {$R 'DebugWithCodeSiteImages.res' '..\Images\DebugWithCodeSiteImages.rc'}
 
-Uses
+uses
   DebugWithCodeSite.InterfaceInitialisation in '..\Source\DebugWithCodeSite.InterfaceInitialisation.pas',
   DebugWithCodeSite.Wizard in '..\Source\DebugWithCodeSite.Wizard.pas',
   DebugWithCodeSite.Functions in '..\Source\DebugWithCodeSite.Functions.pas',
@@ -33,7 +33,8 @@ Uses
   DebugWithCodeSite.OptionsIDEInterface in '..\Source\DebugWithCodeSite.OptionsIDEInterface.pas',
   DebugWithCodeSite.OptionsFrame in '..\Source\DebugWithCodeSite.OptionsFrame.pas' {frameDWCSOptions: TFrame},
   DebugWithCodeSite.Types in '..\Source\DebugWithCodeSite.Types.pas',
-  DebugWithCodeSite.Interfaces in '..\Source\DebugWithCodeSite.Interfaces.pas';
+  {$R}
+  DebugWithCodeSite.Interfaces in '..\Source\DebugWithCodeSite.Interfaces.pas' {$R *.res};
 
 {$R *.res}
 
