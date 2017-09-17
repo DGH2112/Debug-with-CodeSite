@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    16 Sep 2017
+  @Date    17 Sep 2017
 
 **)
 Unit DebugWithCodeSite.Functions;
@@ -16,7 +16,7 @@ Uses
 
 {$INCLUDE CompilerDefinitions.Inc}
 
-  Function  GetIdentifierAtCursor(Const EditPos : TOTAEditPos): String;
+  Function  GetIdentifierAtCursor : String;
   Procedure CheckCodeSiteLogging;
   Procedure CheckDebuggingDCUs;
   Procedure CheckLibraryPath;
@@ -130,55 +130,109 @@ End;
 
 (**
 
-  This method returns the identifier at the cursor position in the passed module.
+  This method returns the identifier at the cursor position in the editor.
 
-  @precon  Module must be a valid instance.
-  @postcon The identifier at the module cursor position is returned if found.
+  @precon  SourceEditor must be a valid instance.
+  @postcon Returns the identifier at the cursor position in the editor if found else returns null.
 
-  @param   EditPos as a TOTAEditPos as a constant
+  @param   SourceEditor as an IOTASourceEditor as a constant
+  @param   EditPos      as a TOTAEditPos as a constant
   @return  a String
 
 **)
-Function GetIdentifierAtCursor(Const EditPos : TOTAEditPos): String;
+Function IdentifierAtCursor(Const SourceEditor : IOTASourceEditor; Const EditPos : TOTAEditPos) : String;
 
 Const
   strValidIdentChars = ['a'..'z', 'A'..'Z', '_'];
 
 Var
-  SE : IOTASourceEditor;
   slSrcCode : TStringList;
   iLine : Integer;
-  strLine : String;
   iStart, iEnd : Integer;
-  CP: TOTAEditPos;
+  strLine : String;
 
 Begin
   Result := '';
-  SE := ActiveSourceEditor;
-  CP := SE.EditViews[0].CursorPos;
-  If Assigned(SE) Then
-    Begin
-      slSrcCode := TStringList.Create;
-      Try
-        slSrcCode.Text := EditorAsString(SE);
-        iLine := EditPos.Line - 1;
-        If (iLine <= slSrcCode.Count - 1) And (EditPos.Col <= Length(slSrcCode[iLine])) Then
-          Begin
-            strLine := slSrcCode[iLine];
-            iStart := EditPos.Col;
-            // Search backwards for the start of a qualitied identifier
-            While (iStart > 0) And CharInSet(strLine[iStart], strValidIdentChars + ['.']) Do
-              Dec(iStart);
-            Inc(iStart);
-            iEnd := EditPos.Col;
-            // Search forwards for the end of the current identifier
-            While (iEnd < Length(strLine)) And CharInSet(strLine[iEnd], strValidIdentChars) Do
-              Inc(iEnd);
-            Result := Copy(strLine, iStart, iEnd - iStart);
-          End;
-      Finally
-        slSrcCode.Free;
+  slSrcCode := TStringList.Create;
+  Try
+    slSrcCode.Text := EditorAsString(SourceEditor);
+    iLine := EditPos.Line - 1;
+    If (iLine <= slSrcCode.Count - 1) And (EditPos.Col <= Length(slSrcCode[iLine])) Then
+      Begin
+        strLine := slSrcCode[iLine];
+        iStart := EditPos.Col;
+        // Search backwards for the start of a qualitied identifier
+        While (iStart > 0) And CharInSet(strLine[iStart], strValidIdentChars + ['.']) Do
+          Dec(iStart);
+        Inc(iStart);
+        iEnd := EditPos.Col;
+        // Search forwards for the end of the current identifier
+        While (iEnd < Length(strLine)) And CharInSet(strLine[iEnd], strValidIdentChars) Do
+          Inc(iEnd);
+        Result := Copy(strLine, iStart, iEnd - iStart);
       End;
+  Finally
+    slSrcCode.Free;
+  End;
+End;
+
+(**
+
+  This method returns the selected text in the editor.
+
+  @precon  SourceEditor must be a valid instance.
+  @postcon Returns the selected text in the editor.
+
+  @param   SourceEditor as an IOTASourceEditor as a constant
+  @return  a String
+
+**)
+Function SelectedText(Const SourceEditor : IOTASourceEditor) : String;
+
+Var
+  R: IOTAEditReader;
+  iStart, iEnd : Integer;
+  strAnsiBuffer : AnsiString;
+
+Begin
+  iStart := SourceEditor.EditViews[0].CharPosToPos(SourceEditor.BlockStart);
+  iEnd := SourceEditor.EditViews[0].CharPosToPos(SourceEditor.BlockAfter);
+  R := SourceEditor.CreateReader;
+  SetLength(strAnsiBuffer, iEnd - iStart);
+  R.GetText(
+    iStart,
+    PAnsiChar(strAnsiBuffer),
+    iEnd - iStart
+  );
+  Result := String(strAnsiBuffer);
+End;
+
+(**
+
+  This method returns the identifier at the cursor position in the passed module.
+
+  @precon  Module must be a valid instance.
+  @postcon The identifier at the module cursor position is returned if found.
+
+  @return  a String
+
+**)
+Function GetIdentifierAtCursor : String;
+
+Var
+  SourceEditor : IOTASourceEditor;
+  EditPos: TOTAEditPos;
+
+Begin
+  Result := '';
+  SourceEditor := ActiveSourceEditor;
+  EditPos := SourceEditor.EditViews[0].CursorPos;
+  If Assigned(SourceEditor) Then
+    Begin
+      If SourceEditor.EditViews[0].CharPosToPos(SourceEditor.BlockStart) < SourceEditor.EditViews[0].CharPosToPos(SourceEditor.BlockAfter) Then
+        Result := SelectedText(SourceEditor)
+      Else
+        Result := IdentifierAtCursor(SourceEditor, EditPos);
     End;
 End;
 

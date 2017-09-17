@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    16 Sep 2017
+  @Date    17 Sep 2017
 
 **)
 Unit DebugWithCodeSite.Wizard;
@@ -25,12 +25,11 @@ Uses
 
 Type
   (** A class which implements the OIOTAWizard interface to provide the plug-ins main IDE wizard. **)
-  TDWCSWizard = Class(TInterfacedObject, IOTANotifier, IOTAWizard, IDWCSOptionsReadWriter)
+  TDWCSWizard = Class(TInterfacedObject, IOTANotifier, IOTAWizard)
   Strict Private
     FMenuTimer     : TTimer;
     FMenuInstalled : Boolean;
-    FChecks        : TDWCSChecks;
-    FCodeSiteMsg   : String;
+    FPluginOptions : IDWCSPluginOptions;
   Strict Protected
     // IOTAWizard
     Procedure Execute;
@@ -42,16 +41,11 @@ Type
     Procedure BeforeSave;
     Procedure Destroyed;
     Procedure Modified;
-    // IDWCSOptionsReadWriter
-    Procedure ReadOptions(Var Options: TDWCSChecks; Var strCodeSiteMsg : String);
-    Procedure WriteOptions(Const Options: TDWCSChecks; Const strCodeSiteMsg : String);
     // General Methods
     Function  AddImageToList(Const ImageList : TCustomImageList) : Integer;
     Procedure AddMenuToEditorContextMenu;
     Procedure MenuInstallerTimer(Sender : TObject);
     Procedure DebugWithCodeSiteClick(Sender : TObject);
-    Procedure LoadSettings;
-    Procedure SaveSettings;
   Public
     Constructor Create;
     Destructor Destroy; Override;
@@ -74,11 +68,8 @@ Uses
   Registry,
   DebugWithCodeSite.AboutBox,
   DebugWithCodeSite.SplashScreen,
-  DebugWithCodeSite.OptionsIDEInterface;
-
-Const
-  (** The registry key under which the settings are stored. **)
-  strRegKey = 'Software\Season''s Fall\Debug with CodeSite\';
+  DebugWithCodeSite.OptionsIDEInterface,
+  DebugWithCodeSite.PluginOptions;
 
 { TDWCSWizard }
 
@@ -245,23 +236,17 @@ End;
 **)
 Constructor TDWCSWizard.Create;
 
-Var
-  OptionsReadWriter : IDWCSOptionsReadWriter;
-
 Begin
   Inherited Create;
   AddSplashScreen;
   AddAboutBoxEntry;
-  If Supports(Self, IDWCSOptionsReadWriter, OptionsReadWriter) Then
-    TDWCSIDEOptionsHandler.AddOptionsFrameHandler(OptionsReadWriter);
+  FPluginOptions := TDWCSPluginOptions.Create;
+  TDWCSIDEOptionsHandler.AddOptionsFrameHandler(FPluginOptions);
   FMenuInstalled := False;
   FMenuTimer := TTimer.Create(Nil);
   FMenuTimer.Interval := 1000;
   FMenuTimer.OnTimer := MenuInstallerTimer;
   FMenuTimer.Enabled := True;
-  FChecks := [dwcscCodeSiteLogging..dwcscBreak];
-  FCodeSiteMsg := 'CodeSite.Send(''%s'', %s)';
-  LoadSettings;
 End;
 
 (**
@@ -291,11 +276,11 @@ Begin
     If Supports(BorlandIDEServices, IOTADebuggerServices, DS) Then
       Begin
         CP := ES.TopView.CursorPos;
-        strIdentifierAtCursor := GetIdentifierAtCursor(CP);
+        strIdentifierAtCursor := GetIdentifierAtCursor;
         If strIdentifierAtCursor <> '' Then
           Begin
             BP := DS.NewSourceBreakpoint(ES.TopBuffer.FileName, CP.Line, Nil);
-            strMsg := FCodeSiteMsg;
+            strMsg := FPluginOptions.CodeSiteTemplate;
             iPos := Pos('%s', strMsg);
             While iPos > 0 Do
               Begin
@@ -304,15 +289,15 @@ Begin
                 iPos := Pos('%s', strMsg);
               End;
             BP.EvalExpression := strMsg;
-            BP.LogResult := dwcscLogResult In FChecks;
-            BP.DoBreak := dwcscBreak In FChecks;
-            If dwcscCodeSiteLogging In FChecks Then
+            BP.LogResult := dwcscLogResult In FPluginOptions.CheckOptions;
+            BP.DoBreak := dwcscBreak In FPluginOptions.CheckOptions;
+            If dwcscCodeSiteLogging In FPluginOptions.CheckOptions Then
               CheckCodeSiteLogging;
-            If dwcscDebuggingDCUs In FChecks Then
+            If dwcscDebuggingDCUs In FPluginOptions.CheckOptions Then
               CheckDebuggingDCUs;
-            If dwcscLibraryPath In FChecks Then
+            If dwcscLibraryPath In FPluginOptions.CheckOptions Then
               CheckLibraryPath;
-            If dwcscEditBreakpoint In FChecks Then
+            If dwcscEditBreakpoint In FPluginOptions.CheckOptions Then
               BP.Edit(True);
           End Else
             MessageDlg('There is no identifier at the cursor position!', mtWarning, [mbOK], 0);
@@ -330,7 +315,7 @@ End;
 Destructor TDWCSWizard.Destroy;
 
 Begin
-  SaveSettings;
+  FPluginOptions.SaveSettings;
   TDWCSIDEOptionsHandler.RemoveOptionsFrameHandler;
   RemoveAboutBoxEntry;
   FMenuTimer.Free;
@@ -415,29 +400,6 @@ End;
 
 (**
 
-  This method loads the plug-ins settings from the regsitry.
-
-  @precon  None.
-  @postcon  The plug-ins settings are loaded.
-
-**)
-Procedure TDWCSWizard.LoadSettings;
-
-Var
-  R : TRegIniFile;
-
-Begin
-  R := TRegIniFile.Create(strRegKey);
-  Try
-    FCodeSiteMsg := R.ReadString('Setup', 'CodeSiteMsg', FCodeSiteMsg);
-    FChecks := TDWCSChecks(Byte(R.ReadInteger('Setup', 'Options', Byte(FChecks))));
-  Finally
-    R.Free;
-  End;
-End;
-
-(**
-
   This is an on timer event handler.
 
   @precon  None.
@@ -466,64 +428,6 @@ Begin
   // Do nothing
 End;
 
-(**
-
-  This method returns the current state of the check options.
-
-  @precon  None.
-  @postcon The check options are returned to the calling code.
-
-  @param   Options        as a TDWCSChecks as a reference
-  @param   strCodeSiteMsg as a String as a reference
-
-**)
-Procedure TDWCSWizard.ReadOptions(Var Options: TDWCSChecks; Var strCodeSiteMsg : String);
-
-Begin
-  Options := FChecks;
-  strCodeSiteMsg := FCodeSiteMsg;
-End;
-
-(**
-
-  This method saves the settings to the registry.
-
-  @precon  None.
-  @postcon The settings are saved.
-
-**)
-Procedure TDWCSWizard.SaveSettings;
-
-Var
-  R: TRegIniFile;
-
-Begin
-  R := TRegIniFile.Create(strRegKey);
-  Try
-    R.WriteString('Setup', 'CodeSiteMsg', FCodeSiteMsg);
-    R.WriteInteger('Setup', 'Options', Byte(FChecks));
-  Finally
-    R.Free;
-  End;
-End;
-
-(**
-
-  This method updates the check options with the given options.
-
-  @precon  None.
-  @postcon The check options are updated.
-
-  @param   Options        as a TDWCSChecks as a constant
-  @param   strCodeSiteMsg as a String as a constant
-
-**)
-Procedure TDWCSWizard.WriteOptions(Const Options: TDWCSChecks; Const strCodeSiteMsg : String);
-
-Begin
-  FChecks := Options;
-  FCodeSiteMsg := strCodeSiteMsg;
-  SaveSettings;
-End;
-
 End.
+
+

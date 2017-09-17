@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    16 Sep 2017
+  @Date    17 Sep 2017
 
 **)
 Unit DebugWithCodeSite.OptionsIDEInterface;
@@ -25,14 +25,14 @@ Uses
 Type
   (** A class which implements the INTAAddingOptions interface to added options frames
       to the IDEs options dialogue. **)
-  TDWCSIDEOptionsHandler = Class(TInterfacedObject, INTAAddInOptions)
+  TDWCSIDEOptionsHandler = Class(TInterfacedObject, IUnknown, INTAAddInOptions)
   Strict Private
     Class Var
       (** A class variable to hold the instance reference for this IDE options handler. **)
-      FDWCSIDEOptions      : TDWCSIDEOptionsHandler;
+      FDWCSIDEOptions : TDWCSIDEOptionsHandler;
   Strict Private
-    FDWCSOptionsFrame      : TframeDWCSOptions;
-    FDWCSOptionsReadWriter : IDWCSOptionsReadWriter;
+    FDWCSOptionsFrame  : TframeDWCSOptions;
+    FDWCSPluginOptions : IDWCSPluginOptions;
   Strict Protected
     Procedure DialogClosed(Accepted: Boolean);
     Procedure FrameCreated(AFrame: TCustomFrame);
@@ -43,8 +43,8 @@ Type
     Function  IncludeInIDEInsight: Boolean;
     Function  ValidateContents: Boolean;
   Public
-    Constructor Create(Const OptionsReadWriter : IDWCSOptionsReadWriter);
-    Class Procedure AddOptionsFrameHandler(Const OptionsReadWriter : IDWCSOptionsReadWriter);
+    Constructor Create(Const PluginOptions : IDWCSPluginOptions);
+    Class Procedure AddOptionsFrameHandler(Const PluginOptions : IDWCSPluginOptions);
     Class Procedure RemoveOptionsFrameHandler;
   End;
 {$ENDIF}
@@ -54,6 +54,9 @@ Implementation
 {$IFDEF DXE00}
 
 Uses
+  {$IFDEF DEBUG}
+  CodeSiteLogging,
+  {$ENDIF}
   {$IFDEF DXE20}System.SysUtils{$ELSE}SysUtils{$ENDIF},
   DebugWithCodeSite.Types;
 
@@ -64,17 +67,16 @@ Uses
   @precon  None.
   @postcon The IDE options handler is installed into the IDE.
 
-  @param   OptionsReadWriter as an IDWCSOptionsReadWriter as a constant
+  @param   PluginOptions as an IDWCSPluginOptions as a constant
 
 **)
-Class Procedure TDWCSIDEOptionsHandler.AddOptionsFrameHandler(
-  Const OptionsReadWriter : IDWCSOptionsReadWriter);
+Class Procedure TDWCSIDEOptionsHandler.AddOptionsFrameHandler(Const PluginOptions : IDWCSPluginOptions);
 
 Var
   EnvironmentOptionsServices : INTAEnvironmentOptionsServices;
 
 Begin
-  FDWCSIDEOptions := TDWCSIDEOptionsHandler.Create(OptionsReadWriter);
+  FDWCSIDEOptions := TDWCSIDEOptionsHandler.Create(PluginOptions);
   If Supports(BorlandIDEServices, INTAEnvironmentOptionsServices, EnvironmentOptionsServices) Then
     EnvironmentOptionsServices.RegisterAddInOptions(FDWCSIDEOptions);
 End;
@@ -86,13 +88,14 @@ End;
   @precon  None.
   @postcon Stores the Options Read Wrtier interface reference.
 
-  @param   OptionsReadWriter as an IDWCSOptionsReadWriter as a constant
+  @param   PluginOptions as an IDWCSPluginOptions as a constant
 
 **)
-Constructor TDWCSIDEOptionsHandler.Create(Const OptionsReadWriter : IDWCSOptionsReadWriter);
+Constructor TDWCSIDEOptionsHandler.Create(Const PluginOptions : IDWCSPluginOptions);
 
 Begin
-  FDWCSOptionsReadWriter := OptionsReadWriter;
+  Inherited Create;
+  FDWCSPluginOptions := PluginOptions;
 End;
 
 (**
@@ -118,7 +121,9 @@ Begin
     If Supports(FDWCSOptionsFrame, IDWCSOptions, I) Then
       Begin
         I.SaveOptions(Ops, strCodeSiteMsg);
-        FDWCSOptionsReadWriter.WriteOptions(Ops, strCodeSiteMsg);
+        FDWCSPluginOptions.CodeSiteTemplate := strCodeSiteMsg;
+        FDWCSPluginOptions.CheckOptions := Ops;
+        FDWCSPluginOptions.SaveSettings;
       End;
 End;
 
@@ -143,7 +148,8 @@ Begin
   FDWCSOptionsFrame := AFrame As TframeDWCSOptions;
   If Supports(FDWCSOptionsFrame, IDWCSOptions, I) Then
     Begin
-      FDWCSOptionsReadWriter.ReadOptions(Options, strCodeSiteMsg);
+      Options := FDWCSPluginOptions.CheckOptions;
+      strCodeSiteMsg := FDWCSPluginOptions.CodeSiteTemplate;
       I.LoadOptions(Options, strCodeSiteMsg);
     End;
 End;
@@ -269,3 +275,5 @@ End;
 {$ENDIF}
 
 End.
+
+

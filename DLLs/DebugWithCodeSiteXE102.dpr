@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @date    16 Sep 2017
+  @date    17 Sep 2017
 
 **)
 Library DebugWithCodeSiteXE102;
@@ -23,7 +23,7 @@ Library DebugWithCodeSiteXE102;
 {$R 'DWCSITHVerInfo.res' 'DWCSITHVerInfo.RC'}
 {$R 'DebugWithCodeSiteImages.res' '..\Images\DebugWithCodeSiteImages.rc'}
 
-uses
+Uses
   DebugWithCodeSite.InterfaceInitialisation in '..\Source\DebugWithCodeSite.InterfaceInitialisation.pas',
   DebugWithCodeSite.Wizard in '..\Source\DebugWithCodeSite.Wizard.pas',
   DebugWithCodeSite.Functions in '..\Source\DebugWithCodeSite.Functions.pas',
@@ -33,7 +33,8 @@ uses
   DebugWithCodeSite.OptionsIDEInterface in '..\Source\DebugWithCodeSite.OptionsIDEInterface.pas',
   DebugWithCodeSite.OptionsFrame in '..\Source\DebugWithCodeSite.OptionsFrame.pas' {frameDWCSOptions: TFrame},
   DebugWithCodeSite.Types in '..\Source\DebugWithCodeSite.Types.pas',
-  DebugWithCodeSite.Interfaces in '..\Source\DebugWithCodeSite.Interfaces.pas';
+  DebugWithCodeSite.Interfaces in '..\Source\DebugWithCodeSite.Interfaces.pas',
+  DebugWithCodeSite.PluginOptions in '..\Source\DebugWithCodeSite.PluginOptions.pas';
 
 {$R *.res}
 

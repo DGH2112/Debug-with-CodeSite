@@ -6,24 +6,12 @@ EnabledVersionInfo=1
 IncludeInProject=1
 CompileWithBRCC32=0
 MajorVer=1
-MinorVer=0
+MinorVer=1
 ReleaseVer=0
-BuildVer=89
+BuildVer=114
 ResourceName=DWCSITHVerInfo
 WarnBefore=0
 WarnAfter=0
-
-[VersionInfo]
-CompanyName=Season's Fall Music
-FileDescription=Debug with CodeSite: RAD Studio IDE plug-in to allow quick setting of a breakpoint to send debugging information to CodeSite
-FileVersion=1.0.0.89
-InternalName=DebugWithCodeSite
-LegalCopyright=Season's Fall Music
-LegalTrademarks=Season's Fall Music
-OriginalFilename=DebugWithCodeSite
-ProductName=DebugWithCodeSite
-ProductVersion=1.0
-Comments=Debug with CodeSite: RAD Studio IDE plug-in to allow quick setting of a breakpoint to send debugging information to CodeSite
 
 [Zipping]
 Enabled=1
@@ -33,4 +21,16 @@ ExclusionFiles=
 
 [Additional Zip Files]
 Item0=D:\HoylD\RAD Studio\IDE Addins\Debug with CodeSite\Images\*
+
+[VersionInfo]
+CompanyName=Season's Fall Music
+FileDescription=Debug with CodeSite: RAD Studio IDE plug-in to allow quick setting of a breakpoint to send debugging information to CodeSite
+FileVersion=1.1.0.114
+InternalName=DebugWithCodeSite
+LegalCopyright=Season's Fall Music
+LegalTrademarks=Season's Fall Music
+OriginalFilename=DebugWithCodeSite
+ProductName=DebugWithCodeSite
+ProductVersion=1.1
+Comments=Debug with CodeSite: RAD Studio IDE plug-in to allow quick setting of a breakpoint to send debugging information to CodeSite
 

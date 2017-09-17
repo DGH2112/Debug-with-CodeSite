@@ -121,6 +121,7 @@
 
 {$R *.res</Form>
         </DCCReference>
+        <DCCReference Include="..\Source\DebugWithCodeSite.PluginOptions.pas"/>
         <None Include="..\Source\CompilerDefinitions.inc"/>
         <None Include="..\License.md"/>
         <None Include="..\README.md"/>

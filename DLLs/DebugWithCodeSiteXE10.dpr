@@ -5,10 +5,10 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @date    16 Sep 2017
+  @date    17 Sep 2017
 
 **)
-Library DebugWithCodeSiteXE102;
+Library DebugWithCodeSiteXE10;
 
 { Important note about DLL memory management: ShareMem must be the
   first unit in your library's USES clause AND your project's (select
@@ -33,7 +33,8 @@ Uses
   DebugWithCodeSite.OptionsIDEInterface in '..\Source\DebugWithCodeSite.OptionsIDEInterface.pas',
   DebugWithCodeSite.OptionsFrame in '..\Source\DebugWithCodeSite.OptionsFrame.pas' {frameDWCSOptions: TFrame},
   DebugWithCodeSite.Types in '..\Source\DebugWithCodeSite.Types.pas',
-  DebugWithCodeSite.Interfaces in '..\Source\DebugWithCodeSite.Interfaces.pas';
+  DebugWithCodeSite.Interfaces in '..\Source\DebugWithCodeSite.Interfaces.pas',
+  DebugWithCodeSite.PluginOptions in '..\Source\DebugWithCodeSite.PluginOptions.pas';
 
 {$R *.res}
 

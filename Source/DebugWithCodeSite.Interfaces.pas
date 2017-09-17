@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    16 Sep 2017
+  @Date    17 Sep 2017
 
 **)
 Unit DebugWithCodeSite.Interfaces;
@@ -22,11 +22,31 @@ Type
     Procedure SaveOptions(Var CheckOptions : TDWCSChecks; Var strCodeSiteMsg : String);
   End;
 
-  (** An interface to be implemented to allow the options interface to get optiosn from the wizard. **)
-  IDWCSOptionsReadWriter = Interface
-  ['{842A8FBB-A94E-430B-8A13-F1191D72C98D}']
-    Procedure ReadOptions(Var Options : TDWCSChecks; Var strCodeSiteMsg : String);
-    Procedure WriteOptions(Const Options : TDWCSChecks; Const strCodeSiteMsg : String);
+  (** An interface for the Plugin Options **)
+  IDWCSPluginOptions = Interface
+  ['{C0C072B8-4F4C-4EE1-938A-333FF7BCE881}']
+    Function  GetCodeSiteTemplate : String;
+    Procedure SetCodeSiteTemplate(Const strCodeSiteTemplate : String);
+    Function  GetCheckOptions : TDWCSChecks;
+    Procedure SetCheckOptions(Const setCheckOptions : TDWCSChecks);
+    Procedure LoadSettings;
+    Procedure SaveSettings;
+    (**
+      This property gets and sets the CodeSite template that is used to fill the breakpoint evaluation
+      expression.
+      @precon  None.
+      @postcon Gets and sets the CodeSite template that is used to fill the breakpoint evaluation
+               expression.
+      @return  a String
+    **)
+    Property CodeSiteTemplate : String Read GetCodeSiteTemplate Write SetCodeSiteTemplate;
+    (**
+      This property gets and sets the check options that is used to fill the breakpoint.
+      @precon  None.
+      @postcon Gets and sets the check options that is used to fill the breakpoint.
+      @return  a TDWCSChecks
+    **)
+    Property CheckOptions : TDWCSChecks Read GetCheckOptions Write SetCheckOptions;
   End;
 
 Implementation
